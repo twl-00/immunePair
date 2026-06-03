@@ -1,0 +1,26 @@
+Package: immunePairMarker
+Type: Package
+Title: Pairwise Gene Marker Analysis for Immune Response Studies
+Version: 0.1.0
+Authors@R: person("twl-00", email = "tanwenlu2000@163.com", role = c("aut", "cre"))
+Description: Provides tools for pairwise gene comparison, chi-square screening,
+    Fisher exact testing, and multiple-testing correction for immune response
+    marker discovery.
+License: MIT + file LICENSE
+URL: https://github.com/twl-00/immunePairMarker
+BugReports: https://github.com/twl-00/immunePairMarker/issues
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Imports:
+    Rcpp,
+    stats,
+    tools
+LinkingTo:
+    Rcpp
+Suggests:
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0)
+VignetteBuilder: knitr
+Config/testthat/edition: 3
