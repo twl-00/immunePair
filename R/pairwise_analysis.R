@@ -59,7 +59,7 @@ run_pairwise_chisq <- function(
 #' @param expr Numeric expression matrix.
 #' @param resp Integer response vector.
 #' @param delta_list Delta cutoffs to test.
-#' @param ... Additional arguments passed to [run_pairwise_chisq()].
+#' @param ... Additional arguments passed to `run_pairwise_chisq()`.
 #' @return A data frame with pair counts for each delta.
 #' @export
 run_delta_sensitivity <- function(expr, resp, delta_list = c(0, 0.25, 0.5), ...) {
