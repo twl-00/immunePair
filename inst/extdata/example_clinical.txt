@@ -1,0 +1,9 @@
+sample	response	group
+S1	response	A
+S2	response	A
+S3	response	A
+S4	response	A
+S5	non_response	B
+S6	non_response	B
+S7	non_response	B
+S8	non_response	B
