@@ -74,8 +74,8 @@ plot_pair_roc <- function(
     c(0, 1),
     c(0, 1),
     type = "n",
-    xlim = c(0, 1),
-    ylim = c(0, 1),
+    xlim = c(-0.02, 1.02),
+    ylim = c(-0.02, 1.02),
     xlab = "1 - Specificity",
     ylab = "Sensitivity",
     main = if (single_pair) "" else main,
@@ -83,9 +83,10 @@ plot_pair_roc <- function(
     yaxs = "i",
     axes = FALSE
   )
-  graphics::abline(0, 1, lty = 2, col = "grey70")
-  graphics::axis(1)
-  graphics::axis(2)
+  graphics::segments(0, 0, 1, 1, lty = 2, col = "grey70")
+  roc_ticks <- seq(0, 1, by = 0.2)
+  graphics::axis(1, at = roc_ticks, labels = sprintf("%.1f", roc_ticks))
+  graphics::axis(2, at = roc_ticks, labels = sprintf("%.1f", roc_ticks), las = 1)
   graphics::box()
 
   colors <- .plot_colors(nrow(pairs))
