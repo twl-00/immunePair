@@ -1,6 +1,6 @@
-# immunePairMarker
+# immunePair
 
-`immunePairMarker` is an R package for pairwise gene marker analysis in immune
+`immunePair` is an R package for pairwise gene marker analysis in immune
 response studies. It screens gene pairs using pairwise expression comparisons,
 chi-square testing, Fisher's exact test, and multiple-testing correction.
 
@@ -22,18 +22,18 @@ remotes::install_github("twl-00/immunePairMarker", upgrade = "never")
 ## Quick Start
 
 ```r
-library(immunePairMarker)
+library(immunePair)
 
 expr_file <- system.file(
   "extdata",
   "example_exp.txt",
-  package = "immunePairMarker"
+  package = "immunePair"
 )
 
 clinical_file <- system.file(
   "extdata",
   "example_clinical.txt",
-  package = "immunePairMarker"
+  package = "immunePair"
 )
 
 result <- run_pair_marker_analysis(
@@ -54,7 +54,7 @@ head(result$sig_pairs)
 
 ## Method Overview
 
-`immunePairMarker` uses the following workflow:
+`immunePair` uses the following workflow:
 
 1. Read an expression matrix and a clinical annotation table.
 2. Remove duplicated or missing gene names.
@@ -181,7 +181,7 @@ biomarkers.
 
 ## Citation
 
-If you use `immunePairMarker` in your research, please cite the GitHub
+If you use `immunePair` in your research, please cite the GitHub
 repository:
 
 ```text

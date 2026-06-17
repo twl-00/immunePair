@@ -1,6 +1,6 @@
-# immunePairMarker 0.1.0
+# immunePair 0.1.0
 
-Initial public release of `immunePairMarker`.
+Initial public release of `immunePair`.
 
 ## Main features
 

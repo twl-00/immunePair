@@ -1,4 +1,4 @@
-Package: immunePairMarker
+Package: immunePair
 Type: Package
 Title: Pairwise Gene Marker Analysis for Immune Response Studies
 Version: 0.1.0

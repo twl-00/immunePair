@@ -22,12 +22,12 @@
 #' expr_file <- system.file(
 #'   "extdata",
 #'   "example_exp.txt",
-#'   package = "immunePairMarker"
+#'   package = "immunePair"
 #' )
 #' clinical_file <- system.file(
 #'   "extdata",
 #'   "example_clinical.txt",
-#'   package = "immunePairMarker"
+#'   package = "immunePair"
 #' )
 #'
 #' result <- run_pair_marker_analysis(
