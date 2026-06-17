@@ -55,8 +55,12 @@ head(result$sig_pairs)
 Basic downstream plots can be generated directly from the result object:
 
 ```r
-plot_pair_roc(result, top_n = 1)
+plot_pair_roc(result, gene1 = "GENE_A", gene2 = "GENE_B")
 ```
+
+The bundled example data include a small amount of overlap between response and
+non-response samples so that the ROC curve is illustrative rather than
+perfectly separated.
 
 If the clinical table contains survival time and event columns, a Kaplan-Meier
 curve can also be drawn for a selected gene pair:
@@ -209,7 +213,12 @@ Both plotting functions draw to the active graphics device by default. To save
 a plot directly, provide a file path:
 
 ```r
-plot_pair_roc(result, top_n = 1, file = "pair_roc.pdf")
+plot_pair_roc(
+  result,
+  gene1 = "GENE_A",
+  gene2 = "GENE_B",
+  file = "pair_roc.pdf"
+)
 plot_pair_survival(
   result,
   gene1 = "GENE_A",
@@ -219,6 +228,14 @@ plot_pair_survival(
   file = "pair_os_survival.pdf"
 )
 ```
+
+The main screening step uses binary pairwise expression states, such as
+`gene1 > gene2` or `gene1 < gene2`, because relative ordering is robust and easy
+to compare across samples. ROC analysis uses the continuous expression
+difference `gene1 - gene2` by default, after the internal `log2(expression + 1)`
+transformation, because ROC curves require ranking information across samples.
+A positive score means that `gene1` is higher than `gene2`, and a larger score
+means a stronger relative expression difference.
 
 ## Result Interpretation
 

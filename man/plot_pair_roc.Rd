@@ -57,3 +57,12 @@ A data frame with AUC values, invisibly.
 \description{
 Plot ROC curves for gene pairs
 }
+\details{
+The main screening workflow uses binary pairwise expression states, such as
+\code{gene1 > gene2} or \code{gene1 < gene2}. ROC analysis uses the continuous
+expression difference \code{gene1 - gene2} by default, after the internal
+\code{log2(expression + 1)} transformation, because ROC curves require ranking
+information across samples. A positive score means that \code{gene1} is higher
+than \code{gene2}, and a larger score means a stronger relative expression
+difference.
+}
