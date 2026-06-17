@@ -16,7 +16,7 @@ You can install the development version from GitHub:
 
 ```r
 install.packages("remotes")
-remotes::install_github("twl-00/immunePairMarker", upgrade = "never")
+remotes::install_github("twl-00/immunePair", upgrade = "never")
 ```
 
 ## Quick Start
@@ -185,7 +185,7 @@ If you use `immunePair` in your research, please cite the GitHub
 repository:
 
 ```text
-https://github.com/twl-00/immunePairMarker
+https://github.com/twl-00/immunePair
 ```
 
 ## License

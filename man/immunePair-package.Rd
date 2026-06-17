@@ -11,8 +11,8 @@ Tools for pairwise gene marker analysis in immune response studies.
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/twl-00/immunePairMarker}
-  \item Report bugs at \url{https://github.com/twl-00/immunePairMarker/issues}
+  \item \url{https://github.com/twl-00/immunePair}
+  \item Report bugs at \url{https://github.com/twl-00/immunePair/issues}
 }
 
 }
