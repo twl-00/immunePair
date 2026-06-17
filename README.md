@@ -56,7 +56,6 @@ Basic downstream plots can be generated directly from the result object:
 
 ```r
 plot_pair_roc(result, top_n = 1)
-plot_pair_state_heatmap(result, top_n = 10)
 ```
 
 If the clinical table contains survival time and event columns, a Kaplan-Meier
@@ -198,23 +197,27 @@ When `out_dir` is provided, the workflow writes:
 
 ## Downstream Plots
 
-`immunePair` provides several base R plotting functions for quick downstream
+`immunePair` provides base R plotting functions for quick downstream
 inspection:
 
-- `plot_top_pairs_barplot()`: bar plot of top gene pairs by adjusted p-value or
-  odds ratio
 - `plot_pair_roc()`: ROC curve for one or more gene pairs, using the continuous
   expression difference `gene1 - gene2` by default
-- `plot_pair_state_heatmap()`: heatmap of pair states across samples
 - `plot_pair_survival()`: Kaplan-Meier curve when survival time and event
   columns are available
 
-All plotting functions draw to the active graphics device by default. To save a
-plot directly, provide a file path:
+Both plotting functions draw to the active graphics device by default. To save
+a plot directly, provide a file path:
 
 ```r
 plot_pair_roc(result, top_n = 1, file = "pair_roc.pdf")
-plot_pair_state_heatmap(result, top_n = 10, file = "pair_state_heatmap.png")
+plot_pair_survival(
+  result,
+  gene1 = "GENE_A",
+  gene2 = "GENE_B",
+  time_col = "OS_time",
+  event_col = "OS_status",
+  file = "pair_os_survival.pdf"
+)
 ```
 
 ## Result Interpretation

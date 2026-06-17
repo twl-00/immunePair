@@ -1,87 +1,3 @@
-#' Plot top gene pairs
-#'
-#' @param result Result list returned by [run_pair_marker_analysis()] or a pair
-#'   result data frame.
-#' @param top_n Number of top pairs to show.
-#' @param metric Metric to plot. `adjusted_p` is shown as `-log10(adjusted_p)`;
-#'   `OR` is shown as `log2(OR)`.
-#' @param use_sig_pairs If `TRUE`, use `result$sig_pairs` when available.
-#' @param file Optional output path ending in `.pdf`, `.png`, `.jpg`, or `.jpeg`.
-#' @param width Plot width in inches when `file` is provided.
-#' @param height Plot height in inches when `file` is provided.
-#' @param main Plot title.
-#' @param col Bar color.
-#' @return The plotted pair table, invisibly.
-#' @export
-plot_top_pairs_barplot <- function(
-    result,
-    top_n = 10,
-    metric = c("adjusted_p", "OR"),
-    use_sig_pairs = TRUE,
-    file = NULL,
-    width = 7,
-    height = 5,
-    main = NULL,
-    col = NULL) {
-
-  metric <- match.arg(metric)
-  pair_df <- .select_pair_table(result, top_n = top_n, use_sig_pairs = use_sig_pairs)
-
-  if (!metric %in% names(pair_df)) {
-    stop("metric not found in pair table: ", metric, call. = FALSE)
-  }
-
-  labels <- paste(pair_df$gene1, pair_df$gene2, sep = " / ")
-  if (metric == "adjusted_p") {
-    values <- -log10(pmax(pair_df$adjusted_p, .Machine$double.xmin))
-    xlab <- "-log10(adjusted p-value)"
-    if (is.null(main)) {
-      main <- "Top gene pairs by adjusted p-value"
-    }
-    if (is.null(col)) {
-      col <- "#4DBBD5"
-    }
-  } else {
-    values <- log2(pair_df$OR)
-    keep <- is.finite(values)
-    pair_df <- pair_df[keep, , drop = FALSE]
-    labels <- labels[keep]
-    values <- values[keep]
-    if (length(values) == 0) {
-      stop("No finite OR values are available for plotting.", call. = FALSE)
-    }
-    xlab <- "log2(odds ratio)"
-    if (is.null(main)) {
-      main <- "Top gene pairs by odds ratio"
-    }
-    if (is.null(col)) {
-      col <- ifelse(values >= 0, "#D55E00", "#0072B2")
-    }
-  }
-
-  close_device <- .open_plot_device(file, width = width, height = height)
-  old_par <- graphics::par(no.readonly = TRUE)
-  on.exit({
-    graphics::par(old_par)
-    close_device()
-  }, add = TRUE)
-
-  graphics::par(mar = .compact_margins(c(4.5, 6, 3, 1)))
-  graphics::barplot(
-    rev(values),
-    names.arg = rev(labels),
-    horiz = TRUE,
-    las = 1,
-    col = rev(col),
-    border = NA,
-    xlab = xlab,
-    main = main,
-    cex.names = 0.75
-  )
-
-  invisible(pair_df)
-}
-
 #' Plot ROC curves for gene pairs
 #'
 #' @param result Result list returned by [run_pair_marker_analysis()].
@@ -153,9 +69,11 @@ plot_pair_roc <- function(
     c(0, 1),
     c(0, 1),
     type = "n",
+    xlim = c(0, 1),
+    ylim = c(0, 1),
     xlab = "1 - Specificity",
     ylab = "Sensitivity",
-    main = main,
+    main = if (single_pair) "" else main,
     xaxs = "i",
     yaxs = "i"
   )
@@ -180,7 +98,20 @@ plot_pair_roc <- function(
       direction = direction
     )
 
-    graphics::lines(roc$fpr, roc$tpr, col = colors[i], lwd = 2)
+    graphics::lines(
+      .nudge_roc_axis(roc$fpr),
+      .nudge_roc_axis(roc$tpr, upper = TRUE),
+      col = colors[i],
+      lwd = 3,
+      type = "s"
+    )
+    graphics::points(
+      .nudge_roc_axis(roc$fpr),
+      .nudge_roc_axis(roc$tpr, upper = TRUE),
+      col = colors[i],
+      pch = 16,
+      cex = 0.8
+    )
     auc_rows[[i]] <- data.frame(
       gene1 = pairs$gene1[i],
       gene2 = pairs$gene2[i],
@@ -210,7 +141,7 @@ plot_pair_roc <- function(
     "bottomright",
     legend = legend_labels,
     col = colors,
-    lwd = 2,
+    lwd = 3,
     bty = "n",
     cex = 0.8
   )
@@ -221,113 +152,6 @@ plot_pair_roc <- function(
   )
 
   invisible(auc_df)
-}
-
-#' Plot a gene-pair state heatmap
-#'
-#' @param result Result list returned by [run_pair_marker_analysis()].
-#' @param top_n Number of top pairs to show.
-#' @param delta Pairwise expression difference cutoff.
-#' @param use_sig_pairs If `TRUE`, use `result$sig_pairs` when available.
-#' @param response_col Clinical column containing response labels.
-#' @param response_label Label treated as response.
-#' @param order_by_response If `TRUE`, order samples by response status.
-#' @param log_transform If `TRUE`, use `log2(expression + 1)` before comparison.
-#' @param file Optional output path ending in `.pdf`, `.png`, `.jpg`, or `.jpeg`.
-#' @param width Plot width in inches when `file` is provided.
-#' @param height Plot height in inches when `file` is provided.
-#' @param main Plot title.
-#' @return A matrix of pair states, invisibly.
-#' @export
-plot_pair_state_heatmap <- function(
-    result,
-    top_n = 20,
-    delta = 0.25,
-    use_sig_pairs = TRUE,
-    response_col = "response",
-    response_label = "response",
-    order_by_response = TRUE,
-    log_transform = TRUE,
-    file = NULL,
-    width = 8,
-    height = 6,
-    main = "Pair-state heatmap") {
-
-  expr <- .get_result_expr(result)
-  pairs <- .select_pair_table(result, top_n = top_n, use_sig_pairs = use_sig_pairs)
-  state_mat <- .build_pair_state_matrix(
-    expr = expr,
-    pairs = pairs,
-    delta = delta,
-    log_transform = log_transform
-  )
-
-  if (order_by_response) {
-    resp <- tryCatch(
-      .get_result_response(
-        result,
-        response_col = response_col,
-        response_label = response_label
-      ),
-      error = function(e) NULL
-    )
-    if (!is.null(resp)) {
-      common <- intersect(colnames(state_mat), names(resp))
-      sample_order <- common[order(resp[common], decreasing = TRUE)]
-      state_mat <- state_mat[, sample_order, drop = FALSE]
-    }
-  }
-
-  plot_mat <- state_mat
-  plot_mat[is.na(plot_mat)] <- 2
-
-  close_device <- .open_plot_device(file, width = width, height = height)
-  old_par <- graphics::par(no.readonly = TRUE)
-  on.exit({
-    graphics::par(old_par)
-    close_device()
-  }, add = TRUE)
-
-  row_labels <- rownames(plot_mat)
-  col_labels <- colnames(plot_mat)
-  graphics::par(mar = .compact_margins(c(5, 6, 3, 4)))
-  graphics::image(
-    x = seq_len(ncol(plot_mat)),
-    y = seq_len(nrow(plot_mat)),
-    z = t(plot_mat[nrow(plot_mat):1, , drop = FALSE]),
-    col = c("#0072B2", "#D55E00", "#BDBDBD"),
-    breaks = c(-0.5, 0.5, 1.5, 2.5),
-    axes = FALSE,
-    xlab = "",
-    ylab = "",
-    main = main
-  )
-  graphics::axis(
-    1,
-    at = seq_along(col_labels),
-    labels = col_labels,
-    las = 2,
-    cex.axis = min(0.8, max(0.35, 10 / max(1, length(col_labels))))
-  )
-  graphics::axis(
-    2,
-    at = seq_along(row_labels),
-    labels = rev(row_labels),
-    las = 1,
-    cex.axis = min(0.8, max(0.35, 12 / max(1, length(row_labels))))
-  )
-  graphics::box()
-  graphics::legend(
-    "topright",
-    inset = c(-0.18, 0),
-    legend = c("state 0", "state 1", "NA"),
-    fill = c("#0072B2", "#D55E00", "#BDBDBD"),
-    border = NA,
-    bty = "n",
-    xpd = TRUE
-  )
-
-  invisible(state_mat)
 }
 
 #' Plot a Kaplan-Meier curve for a gene pair
@@ -566,21 +390,6 @@ plot_pair_survival <- function(
   list(state = state, score = diff_score)
 }
 
-.build_pair_state_matrix <- function(expr, pairs, delta = 0.25, log_transform = TRUE) {
-  rows <- lapply(seq_len(nrow(pairs)), function(i) {
-    .pair_state_and_score(
-      expr = expr,
-      gene1 = pairs$gene1[i],
-      gene2 = pairs$gene2[i],
-      delta = delta,
-      log_transform = log_transform
-    )$state
-  })
-  state_mat <- do.call(rbind, rows)
-  rownames(state_mat) <- paste(pairs$gene1, pairs$gene2, sep = " / ")
-  state_mat
-}
-
 .compute_roc <- function(response, score, direction = "auto") {
   keep <- !is.na(response) & !is.na(score)
   response <- as.integer(response[keep])
@@ -621,6 +430,15 @@ plot_pair_survival <- function(
   tpr <- tpr[ord]
   auc <- sum(diff(fpr) * (head(tpr, -1) + tail(tpr, -1)) / 2)
   list(fpr = fpr, tpr = tpr, auc = auc)
+}
+
+.nudge_roc_axis <- function(x, upper = FALSE, eps = 0.006) {
+  if (upper) {
+    x[x >= 1] <- 1 - eps
+  } else {
+    x[x <= 0] <- eps
+  }
+  x
 }
 
 .open_plot_device <- function(file = NULL, width = 7, height = 5, res = 150) {
