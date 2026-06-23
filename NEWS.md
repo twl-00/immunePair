@@ -8,6 +8,9 @@
   directionally consistent gene-pair prioritization:
   `integrate_pair_results()`, `read_pair_result()`, and
   `write_integrated_pair_results()`.
+- Added `plot_integrated_pair_roc()` and `plot_integrated_pair_survival()` for
+  ROC and survival plotting of stable pairs selected by multi-dataset
+  integration.
 
 # immunePair 0.1.0
 

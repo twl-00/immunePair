@@ -11,7 +11,9 @@ case-control annotations, such as responder versus non-responder, sensitive
 versus resistant, disease versus normal, mutant versus wildtype, or high-risk
 versus low-risk groups.
 
-![PairMarker workflow overview](man/figures/immunePair-workflow.png)
+![PairMarker workflow overview](man/figures/PairMarker-workflow.png)
+
+Editable workflow PDF: [PairMarker-workflow-editable.pdf](man/figures/PairMarker-workflow-editable.pdf)
 
 ## Installation
 
@@ -342,6 +344,37 @@ by more supporting datasets, stronger evidence scores, smaller adjusted
 p-values, and more consistent OR directions. When `canonicalize_pairs = TRUE`,
 the default, pairs such as `GENE_A|GENE_B` and `GENE_B|GENE_A` are treated as
 the same pair and the OR direction is harmonized.
+
+Stable pairs selected by `integrate_pair_results()` can also be plotted in any
+dataset result object. This makes it possible to use multiple datasets for pair
+prioritization and then evaluate the selected pair in a training, validation,
+or external cohort.
+
+```r
+plot_integrated_pair_roc(
+  result = validation_result,
+  integrated = integrated,
+  top_n = 3
+)
+
+plot_integrated_pair_survival(
+  result = validation_result,
+  integrated = integrated,
+  rank = 1,
+  time_col = "OS_time",
+  event_col = "OS_status"
+)
+```
+
+To plot a specific integrated pair by ID:
+
+```r
+plot_integrated_pair_roc(
+  result = validation_result,
+  integrated = integrated,
+  pair_id = "GENE_A|GENE_B"
+)
+```
 
 ## Downstream Plots
 

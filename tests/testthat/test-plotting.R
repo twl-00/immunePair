@@ -52,3 +52,24 @@ test_that("plot pair selector prefers significant pairs", {
   expect_equal(selected$gene1, "E")
   expect_equal(selected$gene2, "F")
 })
+
+test_that("integrated plot selector supports top rank and pair_id", {
+  integrated <- list(
+    summary = data.frame(
+      pair_id = c("A|B", "C|D"),
+      gene1 = c("A", "C"),
+      gene2 = c("B", "D"),
+      n_dataset = c(3, 2)
+    )
+  )
+
+  select_integrated <- getFromNamespace(".select_integrated_plot_pairs", "PairMarker")
+
+  top_pair <- select_integrated(integrated, top_n = 1)
+  expect_equal(top_pair$gene1, "A")
+  expect_equal(top_pair$gene2, "B")
+
+  pair_by_id <- select_integrated(integrated, pair_id = "C|D")
+  expect_equal(pair_by_id$gene1, "C")
+  expect_equal(pair_by_id$gene2, "D")
+})

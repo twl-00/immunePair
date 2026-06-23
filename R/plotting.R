@@ -306,6 +306,73 @@ plot_pair_survival <- function(
   ))
 }
 
+#' Plot ROC curves for integrated stable gene pairs
+#'
+#' @param result Result list returned by [run_pair_marker_analysis()] for the
+#'   dataset used to draw the ROC curve.
+#' @param integrated Result returned by [integrate_pair_results()], or its
+#'   `summary` data frame.
+#' @param top_n Number of top integrated pairs to plot.
+#' @param pair_id Optional pair identifier to plot instead of the top ranked
+#'   pairs.
+#' @param ... Additional arguments passed to [plot_pair_roc()].
+#' @return A data frame with AUC values, invisibly.
+#' @export
+plot_integrated_pair_roc <- function(
+    result,
+    integrated,
+    top_n = 1,
+    pair_id = NULL,
+    ...) {
+
+  pairs <- .select_integrated_plot_pairs(
+    integrated,
+    top_n = top_n,
+    pair_id = pair_id
+  )
+
+  plot_pair_roc(
+    result,
+    gene1 = pairs$gene1,
+    gene2 = pairs$gene2,
+    ...
+  )
+}
+
+#' Plot a Kaplan-Meier curve for an integrated stable gene pair
+#'
+#' @param result Result list returned by [run_pair_marker_analysis()] for the
+#'   dataset used to draw the survival curve.
+#' @param integrated Result returned by [integrate_pair_results()], or its
+#'   `summary` data frame.
+#' @param rank Rank of the integrated pair to plot when `pair_id` is not
+#'   supplied.
+#' @param pair_id Optional pair identifier to plot instead of selecting by rank.
+#' @param ... Additional arguments passed to [plot_pair_survival()].
+#' @return A list with the plotted data, survival fit, log-rank p-value, and
+#'   Cox hazard ratio, invisibly.
+#' @export
+plot_integrated_pair_survival <- function(
+    result,
+    integrated,
+    rank = 1,
+    pair_id = NULL,
+    ...) {
+
+  pairs <- .select_integrated_plot_pairs(
+    integrated,
+    rank = rank,
+    pair_id = pair_id
+  )
+
+  plot_pair_survival(
+    result,
+    gene1 = pairs$gene1[1],
+    gene2 = pairs$gene2[1],
+    ...
+  )
+}
+
 .select_pair_table <- function(result, top_n = 10, use_sig_pairs = TRUE) {
   if (is.data.frame(result)) {
     pair_df <- result
@@ -348,6 +415,62 @@ plot_pair_survival <- function(
     return(data.frame(gene1 = gene1, gene2 = gene2, stringsAsFactors = FALSE))
   }
   .select_pair_table(result, top_n = top_n, use_sig_pairs = use_sig_pairs)
+}
+
+.select_integrated_plot_pairs <- function(
+    integrated,
+    top_n = 1,
+    rank = NULL,
+    pair_id = NULL) {
+
+  summary <- if (is.list(integrated) && !is.null(integrated$summary)) {
+    integrated$summary
+  } else if (is.data.frame(integrated)) {
+    integrated
+  } else {
+    stop("integrated must be returned by integrate_pair_results() or be a summary data frame.", call. = FALSE)
+  }
+
+  required_cols <- c("gene1", "gene2")
+  missing_cols <- setdiff(required_cols, names(summary))
+  if (length(missing_cols) > 0) {
+    stop("integrated summary is missing columns: ", paste(missing_cols, collapse = ", "), call. = FALSE)
+  }
+  if (nrow(summary) == 0) {
+    stop("integrated summary is empty.", call. = FALSE)
+  }
+
+  if (!is.null(pair_id)) {
+    if (!"pair_id" %in% names(summary)) {
+      stop("integrated summary must contain pair_id when pair_id is supplied.", call. = FALSE)
+    }
+    selected <- summary[summary$pair_id %in% pair_id, , drop = FALSE]
+    if (nrow(selected) == 0) {
+      stop("pair_id not found in integrated summary: ", paste(pair_id, collapse = ", "), call. = FALSE)
+    }
+  } else if (!is.null(rank)) {
+    if (length(rank) != 1 || is.na(rank) || rank < 1 || rank > nrow(summary)) {
+      stop("rank must be between 1 and the number of integrated pairs.", call. = FALSE)
+    }
+    selected <- summary[rank, , drop = FALSE]
+  } else {
+    if (length(top_n) != 1 || is.na(top_n) || top_n < 1) {
+      stop("top_n must be a positive integer.", call. = FALSE)
+    }
+    selected <- summary[seq_len(min(top_n, nrow(summary))), , drop = FALSE]
+  }
+
+  missing_genes <- is.na(selected$gene1) | selected$gene1 == "" |
+    is.na(selected$gene2) | selected$gene2 == ""
+  if (any(missing_genes)) {
+    stop("Selected integrated pairs must contain gene1 and gene2 values.", call. = FALSE)
+  }
+
+  data.frame(
+    gene1 = selected$gene1,
+    gene2 = selected$gene2,
+    stringsAsFactors = FALSE
+  )
 }
 
 .get_result_expr <- function(result) {
