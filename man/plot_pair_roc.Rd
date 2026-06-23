@@ -11,8 +11,11 @@ plot_pair_roc(
   top_n = 1,
   delta = 0.25,
   score = "difference",
-  response_col = "response",
-  response_label = "response",
+  phenotype_col = "response",
+  positive_label = "response",
+  negative_label = NULL,
+  response_col = NULL,
+  response_label = NULL,
   use_sig_pairs = TRUE,
   direction = c("auto", "as_is"),
   log_transform = TRUE,
@@ -33,9 +36,14 @@ plot_pair_roc(
 
 \item{score}{Deprecated. ROC analysis always uses the continuous expression difference \code{gene1 - gene2}.}
 
-\item{response_col}{Clinical column containing response labels.}
+\item{phenotype_col}{Clinical column containing phenotype labels.}
 
-\item{response_label}{Label treated as response.}
+\item{positive_label}{Label coded as the positive class.}
+
+\item{negative_label}{Optional label coded as the negative class.}
+
+\item{response_col, response_label}{Deprecated aliases for
+\code{phenotype_col} and \code{positive_label}.}
 
 \item{use_sig_pairs}{If \code{TRUE}, use \code{result$sig_pairs} when available.}
 

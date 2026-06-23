@@ -8,8 +8,11 @@
 #' @param delta Pairwise expression difference cutoff.
 #' @param score Deprecated. ROC analysis always uses the continuous expression
 #'   difference `gene1 - gene2`.
-#' @param response_col Clinical column containing response labels.
-#' @param response_label Label treated as response.
+#' @param phenotype_col Clinical column containing phenotype labels.
+#' @param positive_label Label coded as the positive class.
+#' @param negative_label Optional label coded as the negative class.
+#' @param response_col,response_label Deprecated aliases for
+#'   `phenotype_col` and `positive_label`.
 #' @param use_sig_pairs If `TRUE`, use `result$sig_pairs` when available.
 #' @param direction If `auto`, scores are reversed when the initial AUC is below
 #'   0.5.
@@ -27,8 +30,11 @@ plot_pair_roc <- function(
     top_n = 1,
     delta = 0.25,
     score = "difference",
-    response_col = "response",
-    response_label = "response",
+    phenotype_col = "response",
+    positive_label = "response",
+    negative_label = NULL,
+    response_col = NULL,
+    response_label = NULL,
     use_sig_pairs = TRUE,
     direction = c("auto", "as_is"),
     log_transform = TRUE,
@@ -44,11 +50,21 @@ plot_pair_roc <- function(
     )
   }
   direction <- match.arg(direction)
+  if (!is.null(response_col)) {
+    warning("response_col is deprecated; use phenotype_col instead.", call. = FALSE)
+    phenotype_col <- response_col
+  }
+  if (!is.null(response_label)) {
+    warning("response_label is deprecated; use positive_label instead.", call. = FALSE)
+    positive_label <- response_label
+  }
+
   expr <- .get_result_expr(result)
   resp <- .get_result_response(
     result,
-    response_col = response_col,
-    response_label = response_label
+    phenotype_col = phenotype_col,
+    positive_label = positive_label,
+    negative_label = negative_label
   )
   pairs <- .resolve_plot_pairs(
     result,
@@ -348,10 +364,15 @@ plot_pair_survival <- function(
   result$clinical
 }
 
-.get_result_response <- function(result, response_col = "response", response_label = "response") {
+.get_result_response <- function(
+    result,
+    phenotype_col = "response",
+    positive_label = "response",
+    negative_label = NULL) {
   clinical <- if (is.list(result) && !is.null(result$clinical)) result$clinical else NULL
-  if (is.list(result) && !is.null(result$response)) {
-    resp <- as.integer(result$response)
+  if (is.list(result) && (!is.null(result$phenotype) || !is.null(result$response))) {
+    resp <- if (!is.null(result$phenotype)) result$phenotype else result$response
+    resp <- as.integer(resp)
     if (is.null(names(resp))) {
       if (!is.null(clinical)) {
         names(resp) <- rownames(clinical)
@@ -364,12 +385,17 @@ plot_pair_survival <- function(
   if (is.null(clinical)) {
     stop("result must contain response or clinical data.", call. = FALSE)
   }
-  resp <- make_response_vector(
+  resp <- make_binary_label_vector(
     clinical,
-    response_col = response_col,
-    response_label = response_label
+    phenotype_col = phenotype_col,
+    positive_label = positive_label,
+    negative_label = negative_label
   )
-  names(resp) <- rownames(clinical)
+  keep <- !is.na(resp)
+  resp <- resp[keep]
+  if (is.null(names(resp)) && !is.null(rownames(clinical))) {
+    names(resp) <- rownames(clinical)[keep]
+  }
   resp
 }
 
@@ -398,7 +424,7 @@ plot_pair_survival <- function(
   response <- as.integer(response[keep])
   score <- as.numeric(score[keep])
   if (length(response) == 0 || length(unique(response)) < 2) {
-    stop("ROC analysis requires both response and non-response samples.", call. = FALSE)
+    stop("ROC analysis requires both positive and negative samples.", call. = FALSE)
   }
   if (length(unique(score)) < 2) {
     stop("ROC analysis requires at least two unique score values.", call. = FALSE)

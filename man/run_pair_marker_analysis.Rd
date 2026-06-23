@@ -9,8 +9,11 @@ run_pair_marker_analysis(
   clinical_file,
   out_dir = NULL,
   gene_col = NULL,
-  response_col = "response",
-  response_label = "response",
+  phenotype_col = "response",
+  positive_label = "response",
+  negative_label = NULL,
+  response_col = NULL,
+  response_label = NULL,
   main_delta = 0.25,
   delta_list = c(0, 0.25, 0.5),
   dataset_name = tools::file_path_sans_ext(basename(expr_file)),
@@ -31,9 +34,15 @@ run_pair_marker_analysis(
 
 \item{gene_col}{Gene column name in expression table.}
 
-\item{response_col}{Clinical response column.}
+\item{phenotype_col}{Clinical phenotype column.}
 
-\item{response_label}{Label treated as response.}
+\item{positive_label}{Label coded as the positive class.}
+
+\item{negative_label}{Optional label coded as the negative class. If \code{NULL},
+all labels other than \code{positive_label} are coded as 0.}
+
+\item{response_col, response_label}{Deprecated aliases for
+\code{phenotype_col} and \code{positive_label}.}
 
 \item{main_delta}{Delta cutoff for the main analysis.}
 
@@ -55,7 +64,7 @@ run_pair_marker_analysis(
 }
 \value{
 A list with filtered expression matrix, aligned clinical data,
-response vector, sensitivity summary, all pairs, significant pairs, and
+binary phenotype vector, sensitivity summary, all pairs, significant pairs, and
 output paths.
 }
 \description{
@@ -65,20 +74,20 @@ Run the complete pair marker analysis workflow
 expr_file <- system.file(
   "extdata",
   "example_exp.txt",
-  package = "immunePair"
+  package = "PairMarker"
 )
 clinical_file <- system.file(
   "extdata",
   "example_clinical.txt",
-  package = "immunePair"
+  package = "PairMarker"
 )
 
 result <- run_pair_marker_analysis(
   expr_file = expr_file,
   clinical_file = clinical_file,
   out_dir = tempdir(),
-  response_col = "response",
-  response_label = "response",
+  phenotype_col = "response",
+  positive_label = "response",
   main_delta = 0.25,
   delta_list = c(0, 0.25, 0.5),
   dataset_name = "example"

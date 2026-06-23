@@ -1,3 +1,10 @@
+# PairMarker 0.2.0
+
+- Renamed the package from `immunePair` to `PairMarker`.
+- Generalized the workflow from immune response labels to binary phenotype labels.
+- Added `phenotype_col`, `positive_label`, and `negative_label` arguments while
+  keeping `response_col` and `response_label` as deprecated aliases.
+
 # immunePair 0.1.0
 
 Initial public release of `immunePair`.

@@ -4,8 +4,12 @@
 #' @param clinical_file Path to clinical table.
 #' @param out_dir Output directory. If `NULL`, results are not written.
 #' @param gene_col Gene column name in expression table.
-#' @param response_col Clinical response column.
-#' @param response_label Label treated as response.
+#' @param phenotype_col Clinical phenotype column.
+#' @param positive_label Label coded as the positive class.
+#' @param negative_label Optional label coded as the negative class. If `NULL`,
+#'   all labels other than `positive_label` are coded as 0.
+#' @param response_col,response_label Deprecated aliases for
+#'   `phenotype_col` and `positive_label`.
 #' @param main_delta Delta cutoff for the main analysis.
 #' @param delta_list Delta cutoffs for sensitivity analysis.
 #' @param dataset_name Prefix for output file names.
@@ -16,26 +20,26 @@
 #' @param chisq_cutoff Chi-square p-value cutoff.
 #' @param min_valid_prop Minimum valid sample proportion.
 #' @return A list with filtered expression matrix, aligned clinical data,
-#'   response vector, sensitivity summary, all pairs, significant pairs, and
+#'   binary phenotype vector, sensitivity summary, all pairs, significant pairs, and
 #'   output paths.
 #' @examples
 #' expr_file <- system.file(
 #'   "extdata",
 #'   "example_exp.txt",
-#'   package = "immunePair"
+#'   package = "PairMarker"
 #' )
 #' clinical_file <- system.file(
 #'   "extdata",
 #'   "example_clinical.txt",
-#'   package = "immunePair"
+#'   package = "PairMarker"
 #' )
 #'
 #' result <- run_pair_marker_analysis(
 #'   expr_file = expr_file,
 #'   clinical_file = clinical_file,
 #'   out_dir = tempdir(),
-#'   response_col = "response",
-#'   response_label = "response",
+#'   phenotype_col = "response",
+#'   positive_label = "response",
 #'   main_delta = 0.25,
 #'   delta_list = c(0, 0.25, 0.5),
 #'   dataset_name = "example"
@@ -49,8 +53,11 @@ run_pair_marker_analysis <- function(
     clinical_file,
     out_dir = NULL,
     gene_col = NULL,
-    response_col = "response",
-    response_label = "response",
+    phenotype_col = "response",
+    positive_label = "response",
+    negative_label = NULL,
+    response_col = NULL,
+    response_label = NULL,
     main_delta = 0.25,
     delta_list = c(0, 0.25, 0.5),
     dataset_name = tools::file_path_sans_ext(basename(expr_file)),
@@ -61,6 +68,15 @@ run_pair_marker_analysis <- function(
     chisq_cutoff = 0.01,
     min_valid_prop = 0.5) {
 
+  if (!is.null(response_col)) {
+    warning("response_col is deprecated; use phenotype_col instead.", call. = FALSE)
+    phenotype_col <- response_col
+  }
+  if (!is.null(response_label)) {
+    warning("response_label is deprecated; use positive_label instead.", call. = FALSE)
+    positive_label <- response_label
+  }
+
   expr <- read_expression_data(expr_file, gene_col = gene_col)
   expr <- filter_expression_matrix(expr, min_nonzero_prop = min_nonzero_prop)
   clinical <- read_clinical_data(clinical_file)
@@ -68,11 +84,22 @@ run_pair_marker_analysis <- function(
   aligned <- align_samples(expr, clinical)
   expr <- aligned$expr
   clinical <- aligned$clinical
-  resp <- make_response_vector(
+  resp <- make_binary_label_vector(
     clinical,
-    response_col = response_col,
-    response_label = response_label
+    phenotype_col = phenotype_col,
+    positive_label = positive_label,
+    negative_label = negative_label
   )
+  
+  keep <- !is.na(resp)
+  if (!all(keep)) {
+    expr <- expr[, keep, drop = FALSE]
+    clinical <- clinical[keep, , drop = FALSE]
+    resp <- resp[keep]
+  }
+  if (length(unique(resp)) < 2) {
+    stop("Binary phenotype vector must contain both 0 and 1.", call. = FALSE)
+  }
 
   message("Filtered genes: ", nrow(expr), "; aligned samples: ", ncol(expr))
 
@@ -151,6 +178,7 @@ run_pair_marker_analysis <- function(
   list(
     expr = expr,
     clinical = clinical,
+    phenotype = resp,
     response = resp,
     sensitivity = sensitivity,
     pairs = pairs,

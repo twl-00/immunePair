@@ -37,6 +37,50 @@ align_samples <- function(expr, clinical) {
   )
 }
 
+#' Build binary phenotype vector
+#'
+#' @param clinical Clinical data frame.
+#' @param phenotype_col Column containing phenotype labels.
+#' @param positive_label Label coded as 1.
+#' @param negative_label Optional label coded as 0. If `NULL`, all samples not
+#'   matching `positive_label` are coded as 0.
+#' @return Integer vector: 1 for the positive class, 0 for the negative class,
+#'   and `NA` for samples outside `positive_label` and `negative_label` when
+#'   `negative_label` is supplied.
+#' @export
+make_binary_label_vector <- function(
+    clinical,
+    phenotype_col = "response",
+    positive_label = "response",
+    negative_label = NULL) {
+  
+  if (!phenotype_col %in% names(clinical)) {
+    stop("phenotype_col not found in clinical data: ", phenotype_col, call. = FALSE)
+  }
+  
+  phenotype_status <- as.character(clinical[[phenotype_col]])
+  labels <- unique(stats::na.omit(phenotype_status))
+  
+  if (!positive_label %in% labels) {
+    stop("positive_label not found in phenotype_col: ", positive_label, call. = FALSE)
+  }
+  
+  if (!is.null(negative_label) && !negative_label %in% labels) {
+    stop("negative_label not found in phenotype_col: ", negative_label, call. = FALSE)
+  }
+  
+  if (is.null(negative_label)) {
+    out <- ifelse(phenotype_status == positive_label, 1L, 0L)
+  } else {
+    out <- rep(NA_integer_, length(phenotype_status))
+    out[phenotype_status == positive_label] <- 1L
+    out[phenotype_status == negative_label] <- 0L
+  }
+  
+  names(out) <- rownames(clinical)
+  out
+}
+
 #' Build binary response vector
 #'
 #' @param clinical Clinical data frame.
@@ -45,14 +89,10 @@ align_samples <- function(expr, clinical) {
 #' @return Integer vector: 1 for response, 0 for non-response.
 #' @export
 make_response_vector <- function(clinical, response_col = "response", response_label = "response") {
-  if (!response_col %in% names(clinical)) {
-    stop("response_col not found in clinical data: ", response_col, call. = FALSE)
-  }
-
-  response_status <- factor(clinical[[response_col]])
-  if (!response_label %in% levels(response_status)) {
-    stop("response_label not found in response_col: ", response_label, call. = FALSE)
-  }
-
-  ifelse(response_status == response_label, 1L, 0L)
+  unname(make_binary_label_vector(
+    clinical = clinical,
+    phenotype_col = response_col,
+    positive_label = response_label,
+    negative_label = NULL
+  ))
 }

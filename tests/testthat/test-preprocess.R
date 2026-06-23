@@ -15,3 +15,29 @@ test_that("make_response_vector builds a binary response vector", {
 
   expect_equal(make_response_vector(clinical), c(1L, 0L, 1L))
 })
+
+test_that("make_binary_label_vector supports generic phenotype labels", {
+  clinical <- data.frame(
+    drug_status = c("sensitive", "resistant", "unknown", "sensitive"),
+    row.names = paste0("S", 1:4)
+  )
+
+  expect_equal(
+    make_binary_label_vector(
+      clinical,
+      phenotype_col = "drug_status",
+      positive_label = "sensitive"
+    ),
+    c(S1 = 1L, S2 = 0L, S3 = 0L, S4 = 1L)
+  )
+
+  expect_equal(
+    make_binary_label_vector(
+      clinical,
+      phenotype_col = "drug_status",
+      positive_label = "sensitive",
+      negative_label = "resistant"
+    ),
+    c(S1 = 1L, S2 = 0L, S3 = NA_integer_, S4 = 1L)
+  )
+})

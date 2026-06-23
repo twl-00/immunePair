@@ -1,4 +1,4 @@
 library(testthat)
-library(immunePair)
+library(PairMarker)
 
-test_check("immunePair")
+test_check("PairMarker")

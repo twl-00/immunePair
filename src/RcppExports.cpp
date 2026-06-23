@@ -12,7 +12,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 
 // pairwise_chisq_cpp
 List pairwise_chisq_cpp(NumericMatrix mat, IntegerVector resp, double min_prop, double max_prop, double chisq_cutoff, double diff_cutoff, double min_valid_prop);
-RcppExport SEXP _immunePair_pairwise_chisq_cpp(SEXP matSEXP, SEXP respSEXP, SEXP min_propSEXP, SEXP max_propSEXP, SEXP chisq_cutoffSEXP, SEXP diff_cutoffSEXP, SEXP min_valid_propSEXP) {
+RcppExport SEXP _PairMarker_pairwise_chisq_cpp(SEXP matSEXP, SEXP respSEXP, SEXP min_propSEXP, SEXP max_propSEXP, SEXP chisq_cutoffSEXP, SEXP diff_cutoffSEXP, SEXP min_valid_propSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -29,11 +29,11 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_immunePair_pairwise_chisq_cpp", (DL_FUNC) &_immunePair_pairwise_chisq_cpp, 7},
+    {"_PairMarker_pairwise_chisq_cpp", (DL_FUNC) &_PairMarker_pairwise_chisq_cpp, 7},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_immunePair(DllInfo *dll) {
+RcppExport void R_init_PairMarker(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }
